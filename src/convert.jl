@@ -326,7 +326,7 @@ function trixi2vts(filename::AbstractString...;
     # Interpolate data
     if is_datafile
       verbose && println("| Interpolating data...")
-      @timeit "interpolate data" interpolated_data = interpolate_data(Val(format), data, mesh,
+      @timeit "interpolate data" interpolated_data = reshape_node_data(Val(format), data, mesh,
                                                                       n_nodes, n_visnodes, verbose)
     end
 
@@ -342,7 +342,8 @@ function trixi2vts(filename::AbstractString...;
         # Add solution variables
         for (variable_id, label) in enumerate(labels)
           verbose && println("| | Variable: $label...")
-          @timeit label vtk_nodedata[label] = @views interpolated_data[:, :, variable_id]
+          @info size(interpolated_data)
+          @timeit label vtk_nodedata[label, VTKPointData()] = @views interpolated_data[:, :, variable_id]
         end
 
         # Add element variables

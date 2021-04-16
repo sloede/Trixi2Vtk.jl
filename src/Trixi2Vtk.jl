@@ -7,7 +7,7 @@ using ProgressMeter: @showprogress, Progress, next!
 using StaticArrays: SVector
 using TimerOutputs
 using Trixi: Trixi, transfinite_mapping
-using WriteVTK: vtk_grid, MeshCell, VTKCellTypes, vtk_save, paraview_collection
+using WriteVTK: vtk_grid, MeshCell, VTKCellTypes, vtk_save, paraview_collection, VTKPointData
 
 # Include all top-level submodule files
 include("interpolation.jl")

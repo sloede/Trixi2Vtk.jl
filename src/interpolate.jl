@@ -202,7 +202,7 @@ function interpolate_data(::Val{:vts}, input_data, mesh, n_nodes, n_visnodes, ve
   n_variables = last(size(input_data))
 
   # Create output array
-  interpolated = Array{Float64}(undef, Ni, Nj, n_variables)
+  interpolated = Array{Float64}(undef, Ni + 1, Nj + 1, n_variables)
 
   # Compute the value for each visualization node (= cell of structured visualization mesh) as the
   # mean of the four nodal DG values that make up its corners
@@ -221,4 +221,50 @@ function interpolate_data(::Val{:vts}, input_data, mesh, n_nodes, n_visnodes, ve
   end
 
   return interpolated
+end
+
+function reshape_node_data(::Val{:vts}, input_data, mesh, n_nodes, n_visnodes, verbose)
+  nvisnodes = n_nodes-1
+  Nx = size(mesh, 1)
+  Ny = size(mesh, 2)
+  Ni = Nx * nvisnodes
+  Nj = Ny * nvisnodes
+  n_variables = last(size(input_data))
+
+  # Create output array
+  xy = Array{Float64}(undef, Ni + 1, Nj + 1, n_variables)
+
+  # Compute vertex coordinates for all visualization nodes except the last layer of nodex in +x/+y
+  linear_indices = LinearIndices(size(mesh))
+  for v in 1:n_variables
+    for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
+      for j in 1:n_nodes, i in 1:n_nodes
+        index_x = (cell_x - 1) * (n_nodes - 1) + i
+        index_y = (cell_y - 1) * (n_nodes - 1) + j
+        xy[index_x, index_y, v] = input_data[i,   j,   linear_indices[cell_x, cell_y], v]
+      end
+    end
+  end
+
+  # Compute vertex locations in +x direction
+  for v in 1:n_variables
+    for cell_y in axes(mesh, 2), cell_x in Nx
+      for j in 1:n_nodes
+        index_y = (cell_y - 1) * (n_nodes - 1) + j
+        xy[ end, index_y, v] = input_data[end, j, linear_indices[cell_x, cell_y], v]
+      end
+    end
+  end
+
+  # Compute vertex locations in +y direction
+  for v in 1:n_variables
+    for cell_y in Ny, cell_x in axes(mesh, 1)
+      for i in 1:n_nodes
+        index_x = (cell_x - 1) * (n_nodes - 1) + i
+        xy[index_x, end, v] = input_data[i, end, linear_indices[cell_x, cell_y], v]
+      end
+    end
+  end
+
+  return xy
 end

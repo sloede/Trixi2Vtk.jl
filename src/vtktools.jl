@@ -166,7 +166,7 @@ function calc_visualization_nodes(mesh, basis, node_coordinates)
       xy[2, index_x, end] = node_coordinates[2, i, end, linear_indices[cell_x, cell_y]]
     end
   end
-
+  @info size(xy)
   return xy
 end
 
